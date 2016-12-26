@@ -1,5 +1,7 @@
 package simple
 
+import java.time.Instant
+
 import com.twitter.finagle.Http
 import com.twitter.util.Await
 import io.finch._
@@ -22,6 +24,14 @@ object Main extends App {
       Ok(Time(l, currentTime(new java.util.Locale(l.language, l.country))))
     }
 
-  Await.ready(Http.server.serve(":8081", time.toServiceAs))
+  val echo: Endpoint[String] = get("echo" :: param("msg")) { s: String =>
+    Ok(s)
+  }
+
+  val paths: Endpoint[String] = get("what" :: "time") { Ok(Instant.now().toString)}
+
+  val ends = (time :+: echo :+: paths).toServiceAs
+
+  Await.ready(Http.server.serve(":8081", ends))
 
 }
